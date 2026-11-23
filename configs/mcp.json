@@ -1,0 +1,27 @@
+{
+  "servers": [
+    {
+      "name": "filesystem",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem@2.4.0",
+        "./workspace"
+      ],
+      "enabled": false,
+      "approval_required": true
+    },
+    {
+      "name": "playwright",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@0.0.86",
+        "--browser",
+        "chrome"
+      ],
+      "enabled": true,
+      "approval_required": false
+    }
+  ]
+}

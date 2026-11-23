@@ -1,0 +1,11 @@
+frontend-design
+===============
+
+This Skill is adapted from Anthropic's official skills repository:
+https://github.com/anthropics/skills/tree/main/skills/frontend-design
+
+Upstream license: Apache License 2.0
+Full text: https://www.apache.org/licenses/LICENSE-2.0
+
+The SKILL.md content is included here for local use in this project.
+SKILL.md has been translated into Chinese from the upstream English version.
