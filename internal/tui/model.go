@@ -200,9 +200,13 @@ func (m *Model) layout(width, height int) {
 	m.reflow()
 }
 
-// contentWidth 是外框内部可用的宽度：终端宽减去左右留白(4)、边框(2)、内边距(2)。
+// contentWidth 是外框内部可用的宽度：终端宽减去左右留白(4)、边框(2)、内边距(2)，
+// 再额外预留 4 列安全区。
+//
+// 中文终端会把 “ ” · … 等 East Asian Ambiguous 字符渲染成 2 列，而 Charm 系列库
+// 默认按 1 列计算；预留安全区可以避免这类字符把整行顶到终端最右列而触发自动换行。
 func (m *Model) contentWidth() int {
-	return max(30, m.width-8)
+	return max(30, m.width-12)
 }
 
 // contentHeight 是外框内部可用的高度：终端高减去上下留白(2)和边框(2)。
@@ -210,9 +214,10 @@ func (m *Model) contentHeight() int {
 	return max(10, m.height-4)
 }
 
-// bodyHeight 是中间对话区高度：内部高度减去标题(1)、空行(1)、输入框(4)。
+// bodyHeight 是中间对话区高度：内部高度减去标题(1)、空行(1)、
+// 状态行(1) 和输入框(4)。
 func (m *Model) bodyHeight() int {
-	return max(5, m.contentHeight()-6)
+	return max(5, m.contentHeight()-7)
 }
 
 // textWidth 是正文换行宽度；对话框有边框和内边距，再预留缩进。
@@ -268,14 +273,14 @@ func (m *Model) renderBlock(item block) string {
 		return m.renderThinking(item.round, "思考", item.text)
 
 	case blockError:
-		return m.styles.Error.Render("✗ " + item.text)
+		return m.styles.Error.Render("x " + item.text)
 
 	default:
 		label := item.label
 		if label == "" {
 			label = "提示"
 		}
-		return m.styles.Notice.Render("• "+label) + "\n" + m.wrap(item.text, m.textWidth())
+		return m.styles.Notice.Render("* "+label) + "\n" + m.wrap(item.text, m.textWidth())
 	}
 }
 
@@ -285,9 +290,9 @@ func (m *Model) renderTool(item block) string {
 		name = "tool"
 	}
 
-	line := m.styles.Tool.Render("⚙ " + name + " " + compactArgs(item.text))
+	line := m.styles.Tool.Render("> " + name + " " + compactArgs(item.text))
 	if item.running {
-		line += m.styles.Meta.Render("  运行中…")
+		line += m.styles.Meta.Render("  运行中...")
 	} else if item.failed {
 		line += m.styles.Error.Render("  失败")
 	}
@@ -296,26 +301,27 @@ func (m *Model) renderTool(item block) string {
 	builder.WriteString(m.wrap(line, m.textWidth()))
 	if item.result != "" {
 		builder.WriteString("\n")
-		result := m.styles.Result.Render("  ↳ " + truncateLine(item.result, 160))
+		result := m.styles.Result.Render("  -> " + truncateLine(item.result, 160))
 		builder.WriteString(m.wrap(result, m.textWidth()))
 	}
 	return builder.String()
 }
 
 func (m *Model) renderThinking(round int, label, text string) string {
-	title := "──── 🤔 "
+	title := "-- "
 	if round > 0 {
 		title += fmt.Sprintf("第 %d 轮", round)
 	}
-	title += label + " ────"
+	title += label + " --"
 
 	body := m.styles.Thinking.Width(m.textWidth()).PaddingLeft(4).Render(firstLines(text, 20))
 	return m.styles.ThinkMark.Render(title) + "\n" + body
 }
 
 // wrap 在指定宽度内折行，避免长行被终端二次换行后撑破布局。
+// 使用与裁剪一致的列宽计算（ANSI 感知、框线按 1 列），中英文都能正确换行。
 func (m *Model) wrap(text string, width int) string {
-	return lipgloss.NewStyle().Width(max(10, width)).Render(text)
+	return wrapDisplay(text, max(10, width))
 }
 
 func indent(text string, spaces int) string {

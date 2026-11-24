@@ -18,7 +18,7 @@ import (
 //   - 仍超过硬上限时按整轮丢弃，作为最后兜底。
 const (
 	compressMinItems     = 40
-	compressCharBudget   = 20000
+	compressCharBudget   = 60000
 	keepRecentRounds     = 5
 	maxContextItems      = 80
 	trimKeepRounds       = 3
@@ -27,8 +27,11 @@ const (
 	itemRenderLimit      = 600
 
 	// 单轮长任务没有足够的 user 消息可切，改用工具输出降级来兜底。
+	// keepRecentToolOutputs 保留最近几条工具输出；retainedToolOutputs 必须不小于
+	// 单条工具输出上限（read_file 30KB ≈ 30000 字符），否则刚读进来的完整文件会在
+	// 下一轮被截成前几千字，模型误以为文件被截断，于是反复分段重读、耗尽轮数。
 	keepRecentToolOutputs = 4
-	retainedToolOutputs   = 4000
+	retainedToolOutputs   = 30000
 	toolOutputPlaceholder = "[历史工具输出已省略，原始内容未保留]"
 	toolOutputTruncated   = "\n[工具输出已截断]"
 )

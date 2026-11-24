@@ -15,17 +15,18 @@ import (
 type DeleteFile struct {
 	ws       *Workspace
 	approver Approver
+	scope    *ProjectScope
 }
 
-func NewDeleteFile(ws *Workspace, approver Approver) *DeleteFile {
-	return &DeleteFile{ws: ws, approver: approver}
+func NewDeleteFile(ws *Workspace, approver Approver, scope *ProjectScope) *DeleteFile {
+	return &DeleteFile{ws: ws, approver: approver, scope: scope}
 }
 
 func (t *DeleteFile) Definition() llm.Tool {
 	return llm.Tool{
 		Name:        NameDeleteFile,
-		Description: "删除 workspace 内的单个文件，执行前必须获得用户审批；不能删除目录",
-		Parameters:  objectSchema(map[string]any{"path": stringProperty("相对 workspace 的文件路径")}, "path"),
+		Description: "删除当前已确认项目内的单个文件，执行前必须获得用户审批；不能删除目录",
+		Parameters:  objectSchema(map[string]any{"path": stringProperty("相对 workspace 的文件路径，必须在当前项目目录下")}, "path"),
 	}
 }
 
@@ -48,6 +49,9 @@ func (t *DeleteFile) Execute(ctx context.Context, raw json.RawMessage) (string, 
 	}
 	if info.IsDir() {
 		return "", fmt.Errorf("不能删除目录: %q", rel)
+	}
+	if err := t.scope.CheckPath(rel); err != nil {
+		return "", err
 	}
 	if t.approver == nil {
 		return "", fmt.Errorf("未配置审批器，已拒绝执行")

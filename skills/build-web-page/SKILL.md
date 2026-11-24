@@ -7,11 +7,11 @@ description: 在用户要求制作或修改静态网页、个人主页、作品�
 
 ## 工作流程
 1. 先确认页面用途、主要内容、视觉风格和交互需求；信息不足时采用合理默认值并简要说明。
-2. 先列出页面结构、文件清单和视觉方向，调用 confirm_plan 征得用户同意后再创建文件。默认使用原生 HTML、CSS、JavaScript，避免不必要的构建依赖。
-3. 将页面放入 workspace 的独立项目目录，例如 `portfolio/`。
+2. 先确认项目目录名、模式（`create` 新建 / `modify` 修改）、文件清单、页面结构和视觉方向，调用 confirm_plan 征得用户同意后再创建文件。默认使用原生 HTML、CSS、JavaScript，避免不必要的构建依赖。
+3. 新项目必须使用 workspace 下新的独立目录，例如 `game-2048/`；不要复用其他项目目录，修改已有项目时使用 `mode:"modify"` 并在文件清单中列出要覆盖的文件。
 4. 至少创建 `index.html`、`style.css`、`script.js`，按需要增加 README。
 5. 使用语义化 HTML、响应式布局、可访问的按钮和表单标签。
-6. 检查文件引用路径后，**必须调用 `preview_site`**，只传项目目录，例如 `{"path":"portfolio"}`，不要传 `open`。它只启动本地服务并返回地址，不弹窗。
+6. 检查文件引用路径后，**必须调用 `preview_site`**，只传当前项目目录，例如 `{"path":"game-2048"}`，不要传 `open`。它只启动本地服务并返回地址，不弹窗。
 7. **优先用浏览器 MCP 自检**：如果当前注册了 `browser_*` 工具（例如 `mcp__playwright__browser_navigate`），用它打开 `preview_site` 返回的 URL。这是唯一可见的浏览器窗口，用户能看到导航和点击过程；优先用 `browser_snapshot` 检查页面结构和文案，用 `browser_console_messages` 检查报错；有交互时用 `browser_click` 验证关键按钮。`browser_take_screenshot` 只用于留证，图片数据不会进入上下文。
 8. 发现与需求不符、报错或样式异常时：修改代码 → 重新调用 `preview_site` → 再次验证，完成至少一轮修复与复验；如果一次通过，如实报告验证结果，不要为凑流程制造修改。
 9. 把访问地址、实际验证过的页面状态和遗留问题一起告诉用户；没有真正跑过浏览器验证时，不要声称已验证。若浏览器 MCP 不可用，可改用 `preview_site` 的 `open=true` 让默认浏览器打开，并明确说明未能自动验证。

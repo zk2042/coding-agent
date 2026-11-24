@@ -32,6 +32,7 @@ type Deps struct {
 	Skills *skills.Catalog
 	Bus    *events.Bus
 	Memory MemoryStore
+	Scope  *tools.ProjectScope
 	Options
 }
 
@@ -73,6 +74,8 @@ func (a *Agent) Run(ctx context.Context, sess *session.Session, input string) er
 	if a.deps.LLM == nil || a.deps.Tools == nil {
 		return a.abort(fmt.Errorf("Agent 依赖未配置完整"))
 	}
+	// 每个任务重新授权，避免上一个项目的文件清单继续生效。
+	a.deps.Scope.BeginTask()
 	if a.deps.Options.Timeout > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, a.deps.Options.Timeout)
@@ -225,16 +228,18 @@ func (a *Agent) systemPrompt(sess *session.Session) string {
 	b.WriteString(`你是一个谨慎、专业的 Go Coding Agent。你可以分析需求、规划任务、读写 workspace 文件、运行 Shell、加载 Skill、调用 MCP 工具。
 
 规则：
-1. 先理解目标。只读任务可以直接开始；需要创建或修改文件时，先调用 confirm_plan 提交方案（目标和文件清单），用户同意后再写文件。
-2. 读取、列目录、加载 Skill、预览，以及写入 .agent-tmp 下的一次性检查脚本，不需要提交方案。
-3. 删除文件只能调用 delete_file（它会请求用户审批），不要用 run_shell 执行删除命令；delete_file 不能删除目录。
-4. 所有项目文件只能写入 workspace；不要尝试访问或修改工作区之外的内容。
+1. 先理解目标。只读任务可以直接开始；需要创建或修改文件时，先调用 confirm_plan 提交方案，参数必须包含 project（项目目录名）、mode（create 或 modify）、files（文件清单）和 plan，用户同意后再写文件。
+2. 读取、列目录、加载 Skill、预览，以及写入 .agent-tmp 下的一次性检查脚本，不需要提交方案。读取文件用 read_file：它一次返回完整内容（≤30KB）；若结果提示“已读取第 a-b 行”，用 offset 继续读取即可，不要用 run_shell 写脚本分段读文件。
+3. 删除文件也必须先通过 confirm_plan 列入文件清单，再调用 delete_file（它会再次请求用户审批）；不要用 run_shell 执行删除命令；delete_file 不能删除目录。
+4. 所有项目文件只能写入 workspace/<当前项目>/；新项目必须创建新的独立目录；不要写入或修改其他项目目录（例如 portfolio），除非用户明确要求修改该项目。项目文件优先用 write_file 写入，不要用 run_shell 绕过项目范围限制。
 5. 执行 Shell 或需要审批的 MCP 工具会请求用户审批；被拒绝时不要绕过，改为询问用户或调整方案。
 6. 生成代码后尽可能运行检查，并根据错误修复；不要声称执行过实际未执行的命令。
 7. 对不确定的依赖或 API 先检查，不要编造。
 8. Skill 是操作指南：先看索引，需要时调用 load_skill 获取正文，并按正文执行。
 9. 静态网页生成或较大改动后，调用 preview_site 启动本地预览。如果当前注册了 browser_* 工具，用它打开并验证快照、控制台和关键交互，发现问题就修改后重新验证；如果没有注册浏览器工具，明确告诉用户“浏览器验证未执行”，不得声称已验证。纯文字或样式微调不必每次重新验证。
-10. 任务完成时，默认用中文总结创建/修改的文件、运行与验证结果、未完成事项；用户明确要求其他语言时遵从。`)
+10. 任务完成时，默认用中文总结创建/修改的文件、运行与验证结果、未完成事项；用户明确要求其他语言时遵从。
+11. 不确定是新项目还是修改已有项目时，先询问用户，不要猜。
+12. 修改 workspace 根目录的已有文件（如 README.md）时，confirm_plan 的 project 用 "."、mode 用 "modify"；根目录只允许修改已有直接文件，不能用来新建项目文件。`)
 
 	fmt.Fprintf(&b, "\n\n工作区（唯一可写目录）：%s", a.deps.Options.WorkspaceRoot)
 	fmt.Fprintf(&b, "\n执行环境：%s", tools.ShellGuide())
@@ -261,6 +266,13 @@ func (a *Agent) emit(ev events.Event) {
 		return
 	}
 	a.deps.Bus.Publish(ev)
+}
+
+func (a *Agent) activeProject() string {
+	if a.deps.Scope == nil {
+		return ""
+	}
+	return a.deps.Scope.ActiveProject()
 }
 
 func canonicalCalls(calls []llm.ToolCall) string {

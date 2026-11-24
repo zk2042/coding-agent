@@ -41,7 +41,7 @@ func Load() Config {
 		MemoryFile:            resolve(root, setting(values, "MEMORY_FILE", "./data/memory.json")),
 		MemoryEnabled:         !strings.EqualFold(setting(values, "MEMORY_ENABLED", "true"), "false"),
 		MaxSteps:              settingInt(values, "AGENT_MAX_STEPS", 12),
-		RunTimeoutSeconds:     settingInt(values, "AGENT_TIMEOUT_SECONDS", 900),
+		RunTimeoutSeconds:     settingIntZero(values, "AGENT_TIMEOUT_SECONDS", 0),
 		RequestTimeoutSeconds: settingInt(values, "MODEL_REQUEST_TIMEOUT_SECONDS", 120),
 		ShellTimeoutSeconds:   settingInt(values, "SHELL_TIMEOUT_SECONDS", 60),
 	}
@@ -75,6 +75,15 @@ func setting(values map[string]string, key, fallback string) string {
 func settingInt(values map[string]string, key string, fallback int) int {
 	value, err := strconv.Atoi(setting(values, key, ""))
 	if err != nil || value < 1 {
+		return fallback
+	}
+	return value
+}
+
+// settingIntZero 与 settingInt 相同，但允许 0；0 表示关闭该项限制。
+func settingIntZero(values map[string]string, key string, fallback int) int {
+	value, err := strconv.Atoi(setting(values, key, ""))
+	if err != nil || value < 0 {
 		return fallback
 	}
 	return value

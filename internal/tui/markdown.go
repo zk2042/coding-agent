@@ -43,5 +43,7 @@ func (m *Markdown) Render(text string) string {
 	if err != nil {
 		return text
 	}
-	return strings.TrimRight(out, "\n")
+	// Glamour 只在空格处断词，中文长句不会自动换行，会整行输出后被外框裁掉。
+	// 这里再按终端列宽硬折行一次，保证中文段落完整显示。
+	return wrapDisplay(strings.TrimRight(out, "\n"), m.width)
 }

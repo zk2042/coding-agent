@@ -16,7 +16,6 @@ type Styles struct {
 	Error     lipgloss.Style
 	Frame     lipgloss.Style
 	Input     lipgloss.Style
-	StatusBox lipgloss.Style
 	Approve   lipgloss.Style
 }
 
@@ -53,11 +52,6 @@ func NewStyles() Styles {
 			BorderForeground(lipgloss.Color("#3C3C3C")).
 			Padding(0, 1),
 		Input: lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#7D56F4")).
-			Padding(0, 1),
-		// StatusBox 在运行/审批时占据与输入框相同的高度，保证底部不跳动。
-		StatusBox: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("#7D56F4")).
 			Padding(0, 1),

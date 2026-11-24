@@ -25,9 +25,11 @@ var allowedKinds = map[string]bool{
 }
 
 // Entry 是一条长期记忆。
+// Project 为空表示全局记忆；非空表示只对对应项目生效。
 type Entry struct {
 	Key       string    `json:"key"`
 	Kind      string    `json:"kind"`
+	Project   string    `json:"project,omitempty"`
 	Text      string    `json:"text"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -72,7 +74,7 @@ func Open(path string) (*Store, error) {
 		if entry.UpdatedAt.IsZero() {
 			entry.UpdatedAt = entry.CreatedAt
 		}
-		s.entries[entry.Key] = entry
+		s.entries[entryMapKey(entry.Project, entry.Key)] = entry
 	}
 	return s, nil
 }
@@ -104,10 +106,11 @@ func (s *Store) Upsert(entries []Entry) (int, int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// textOwners 以“项目 + 规范化文本”为键，避免不同项目的相同内容互相去重。
 	textOwners := make(map[string]string, len(s.entries))
-	for key, entry := range s.entries {
+	for mapKey, entry := range s.entries {
 		if normalized := normalizeText(entry.Text); normalized != "" {
-			textOwners[normalized] = key
+			textOwners[textMapKey(entry.Project, normalized)] = mapKey
 		}
 	}
 
@@ -119,40 +122,45 @@ func (s *Store) Upsert(entries []Entry) (int, int, error) {
 			continue
 		}
 		normalized := normalizeText(entry.Text)
+		mapKey := entryMapKey(entry.Project, entry.Key)
 
-		if old, ok := s.entries[entry.Key]; ok {
+		if old, ok := s.entries[mapKey]; ok {
 			if old.Text == entry.Text && old.Kind == entry.Kind {
 				continue
 			}
-			if oldNormalized := normalizeText(old.Text); oldNormalized != "" && textOwners[oldNormalized] == entry.Key {
-				delete(textOwners, oldNormalized)
+			if oldNormalized := normalizeText(old.Text); oldNormalized != "" {
+				oldTextKey := textMapKey(entry.Project, oldNormalized)
+				if textOwners[oldTextKey] == mapKey {
+					delete(textOwners, oldTextKey)
+				}
 			}
 			if normalized != "" {
-				if owner, ok := textOwners[normalized]; ok && owner != entry.Key {
-					// 同一内容已挂在另一个 key 下，删除旧条目。
+				textKey := textMapKey(entry.Project, normalized)
+				if owner, ok := textOwners[textKey]; ok && owner != mapKey {
+					// 同一项目内的相同内容已挂在另一个 key 下，删除旧条目。
 					delete(s.entries, owner)
 				}
 			}
 			entry.CreatedAt = old.CreatedAt
 			entry.UpdatedAt = now
-			s.entries[entry.Key] = entry
+			s.entries[mapKey] = entry
 			if normalized != "" {
-				textOwners[normalized] = entry.Key
+				textOwners[textMapKey(entry.Project, normalized)] = mapKey
 			}
 			updated++
 			continue
 		}
 
 		if normalized != "" {
-			if _, ok := textOwners[normalized]; ok {
+			if _, ok := textOwners[textMapKey(entry.Project, normalized)]; ok {
 				continue
 			}
 		}
 		entry.CreatedAt = now
 		entry.UpdatedAt = now
-		s.entries[entry.Key] = entry
+		s.entries[mapKey] = entry
 		if normalized != "" {
-			textOwners[normalized] = entry.Key
+			textOwners[textMapKey(entry.Project, normalized)] = mapKey
 		}
 		added++
 	}
@@ -176,6 +184,9 @@ func (s *Store) saveLocked() error {
 		list = append(list, entry)
 	}
 	sort.Slice(list, func(i, j int) bool {
+		if list[i].Project != list[j].Project {
+			return list[i].Project < list[j].Project
+		}
 		return list[i].Key < list[j].Key
 	})
 
@@ -217,8 +228,36 @@ func clean(entry Entry) Entry {
 	if !allowedKinds[entry.Kind] {
 		entry.Kind = "fact"
 	}
+	entry.Project = cleanProject(entry.Project)
 	entry.Key = keyFor(entry.Key, entry.Text)
 	return entry
+}
+
+func cleanProject(project string) string {
+	project = strings.TrimSpace(project)
+	if project == "" {
+		return ""
+	}
+	project = strings.ReplaceAll(project, "\\", "/")
+	project = strings.Trim(project, "/")
+	if project == "." || project == ".." || strings.Contains(project, "/") {
+		return ""
+	}
+	return truncateRunes(project, 64)
+}
+
+func entryMapKey(project, key string) string {
+	if project == "" {
+		return key
+	}
+	return project + "\x00" + key
+}
+
+func textMapKey(project, normalized string) string {
+	if project == "" {
+		return normalized
+	}
+	return project + "\x00" + normalized
 }
 
 func keyFor(key, text string) string {

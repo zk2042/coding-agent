@@ -44,6 +44,14 @@ func stringProperty(description string) map[string]any {
 	return map[string]any{"type": "string", "description": description}
 }
 
+func stringArrayProperty(description string) map[string]any {
+	return map[string]any{
+		"type":        "array",
+		"items":       map[string]any{"type": "string"},
+		"description": description,
+	}
+}
+
 func integerProperty(description string) map[string]any {
 	return map[string]any{"type": "integer", "description": description}
 }

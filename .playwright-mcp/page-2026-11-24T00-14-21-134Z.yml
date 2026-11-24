@@ -1,0 +1,255 @@
+- generic [active] [ref=f1e1]:
+  - link "跳到主要内容" [ref=f1e2] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - link "返回页面顶部" [ref=f1e6] [cursor=pointer]:
+        - /url: "#top"
+        - generic [ref=f1e8]:
+          - text: 你的名字
+          - emphasis [ref=f1e9]: .dev
+      - navigation "主导航" [ref=f1e10]:
+        - list [ref=f1e11]:
+          - listitem [ref=f1e12]:
+            - link "介绍" [ref=f1e13] [cursor=pointer]:
+              - /url: "#about"
+          - listitem [ref=f1e14]:
+            - link "技能" [ref=f1e15] [cursor=pointer]:
+              - /url: "#skills"
+          - listitem [ref=f1e16]:
+            - link "项目" [ref=f1e17] [cursor=pointer]:
+              - /url: "#projects"
+          - listitem [ref=f1e18]:
+            - link "联系" [ref=f1e19] [cursor=pointer]:
+              - /url: "#contact"
+        - link "聊聊合作" [ref=f1e20] [cursor=pointer]:
+          - /url: "#contact"
+  - main [ref=f1e21]:
+    - generic [ref=f1e23]:
+      - generic [ref=f1e24]:
+        - paragraph [ref=f1e25]: 目前开放：全职机会 / 远程合作
+        - heading "用工程与设计， 把复杂问题变简单" [level=1] [ref=f1e27]:
+          - text: 用工程与设计，
+          - generic [ref=f1e28]: 把复杂问题变简单
+        - paragraph [ref=f1e29]: 你好，我是「你的名字」，一名专注于 Web 体验的高级前端工程师。 擅长把产品需求拆解成清晰的架构，用可维护的代码交付流畅、可访问的界面。
+        - generic [ref=f1e30]:
+          - link "查看项目" [ref=f1e31] [cursor=pointer]:
+            - /url: "#projects"
+          - link "联系方式" [ref=f1e34] [cursor=pointer]:
+            - /url: "#contact"
+        - generic [ref=f1e35]:
+          - generic [ref=f1e36]:
+            - term [ref=f1e37]: 从业年限
+            - definition [ref=f1e38]: 5+ 年
+          - generic [ref=f1e39]:
+            - term [ref=f1e40]: 交付项目
+            - definition [ref=f1e41]: 20+ 个
+          - generic [ref=f1e42]:
+            - term [ref=f1e43]: 性能优化
+            - definition [ref=f1e44]: LCP < 1.5s
+      - complementary "个人名片" [ref=f1e45]:
+        - generic [ref=f1e46]:
+          - generic [ref=f1e52]:
+            - paragraph [ref=f1e53]: 你的名字
+            - paragraph [ref=f1e54]: 高级前端工程师 · Web 体验
+            - paragraph [ref=f1e55]: 中国 · 可远程 / UTC+8
+          - list [ref=f1e59]:
+            - listitem [ref=f1e60]: TypeScript
+            - listitem [ref=f1e61]: React / Vue
+            - listitem [ref=f1e62]: 设计系统
+            - listitem [ref=f1e63]: 性能优化
+          - generic [ref=f1e64]:
+            - generic [ref=f1e65]: 可接受新项目
+            - link "获取简历" [ref=f1e67] [cursor=pointer]:
+              - /url: "#contact"
+    - generic [ref=f1e71]:
+      - generic [ref=f1e72]:
+        - paragraph [ref=f1e73]: "01"
+        - heading "个人介绍" [level=2] [ref=f1e74]
+        - paragraph [ref=f1e75]: 关注用户体验、工程质量与团队协作方式。
+      - generic [ref=f1e76]:
+        - generic [ref=f1e77]:
+          - paragraph [ref=f1e78]:
+            - text: 我是一名前端工程师，日常在
+            - strong [ref=f1e79]: 产品、设计与后端之间
+            - text: 做翻译工作： 把模糊的需求变成可讨论的方案，再把方案落成可演进的前端架构。
+          - paragraph [ref=f1e80]: 过去几年我主要在做 B 端中后台与数据产品，负责过从 0 到 1 的设计系统搭建、 复杂表格与可视化模块的性能治理，也带过小团队做 Code Review 与工程规范落地。
+          - paragraph [ref=f1e81]: 我习惯先用原型验证想法，再用数据确认效果；喜欢写清晰的文档， 也相信「能被别人读懂」的代码才是好代码。
+          - list [ref=f1e82]:
+            - listitem [ref=f1e83]: 设计系统从 0 到 1：沉淀 60+ 组件，接入 8 条业务线
+            - listitem [ref=f1e84]: 性能治理：首屏加载时间下降 45%，LCP 稳定在 1.5s 内
+            - listitem [ref=f1e85]: 协作方式：主导技术评审与规范文档，带教 3 名新同学
+        - generic [ref=f1e86]:
+          - heading "工作方式" [level=3] [ref=f1e87]
+          - list [ref=f1e88]:
+            - listitem [ref=f1e89]:
+              - generic [ref=f1e90]: 理解
+              - text: 先对齐目标与成功指标，明确边界与取舍。
+            - listitem [ref=f1e91]:
+              - generic [ref=f1e92]: 设计
+              - text: 拆分模块、约定接口，先做最小可验证版本。
+            - listitem [ref=f1e93]:
+              - generic [ref=f1e94]: 交付
+              - text: 小步提交、自动化检查，配套文档与监控。
+            - listitem [ref=f1e95]:
+              - generic [ref=f1e96]: 复盘
+              - text: 看数据与反馈，把经验写进规范与工具。
+    - generic [ref=f1e98]:
+      - generic [ref=f1e99]:
+        - paragraph [ref=f1e100]: "02"
+        - heading "技能栈" [level=2] [ref=f1e101]
+        - paragraph [ref=f1e102]: 按能力域划分，标注我在团队中主要承担的部分。
+      - generic [ref=f1e103]:
+        - article [ref=f1e104]:
+          - heading "框架与语言" [level=3] [ref=f1e108]
+          - paragraph [ref=f1e109]: 组件化开发、状态管理、类型安全与可维护的接口设计。
+          - list [ref=f1e110]:
+            - listitem [ref=f1e111]: TypeScript
+            - listitem [ref=f1e112]: React
+            - listitem [ref=f1e113]: Vue 3
+            - listitem [ref=f1e114]: Next.js
+            - listitem [ref=f1e115]: Node.js
+        - article [ref=f1e116]:
+          - heading "界面与动效" [level=3] [ref=f1e123]
+          - paragraph [ref=f1e124]: 响应式布局、设计令牌、微交互与可访问性（a11y）。
+          - list [ref=f1e125]:
+            - listitem [ref=f1e126]: CSS Grid
+            - listitem [ref=f1e127]: Tailwind
+            - listitem [ref=f1e128]: CSS 变量
+            - listitem [ref=f1e129]: Motion
+            - listitem [ref=f1e130]: WCAG
+        - article [ref=f1e131]:
+          - heading "工程化" [level=3] [ref=f1e136]
+          - paragraph [ref=f1e137]: 构建配置、代码质量、CI/CD 与测试体系建设。
+          - list [ref=f1e138]:
+            - listitem [ref=f1e139]: Vite
+            - listitem [ref=f1e140]: Webpack
+            - listitem [ref=f1e141]: ESLint
+            - listitem [ref=f1e142]: GitHub Actions
+            - listitem [ref=f1e143]: Vitest
+        - article [ref=f1e144]:
+          - heading "性能与数据" [level=3] [ref=f1e149]
+          - paragraph [ref=f1e150]: Core Web Vitals 优化、埋点监控与可视化呈现。
+          - list [ref=f1e151]:
+            - listitem [ref=f1e152]: Lighthouse
+            - listitem [ref=f1e153]: ECharts
+            - listitem [ref=f1e154]: Web Vitals
+            - listitem [ref=f1e155]: Sentry
+    - generic [ref=f1e157]:
+      - generic [ref=f1e158]:
+        - paragraph [ref=f1e159]: "03"
+        - heading "项目经历" [level=2] [ref=f1e160]
+        - paragraph [ref=f1e161]: 三个示例项目，替换为你的真实案例与数据。
+      - generic [ref=f1e162]:
+        - article [ref=f1e163]:
+          - generic [ref=f1e164]:
+            - generic [ref=f1e165]: 2024 — 至今
+            - generic [ref=f1e166]: 主导
+          - heading "企业级设计系统与组件库" [level=3] [ref=f1e167]
+          - paragraph [ref=f1e168]: 为 8 条业务线统一视觉与交互语言：从设计令牌、组件 API 到文档站点与发布流程， 支持主题切换与暗色模式，组件覆盖率达到业务界面的 85%。
+          - list [ref=f1e169]:
+            - listitem [ref=f1e170]:
+              - generic [ref=f1e171]: 60+
+              - generic [ref=f1e172]: 组件
+            - listitem [ref=f1e173]:
+              - generic [ref=f1e174]: 85%
+              - generic [ref=f1e175]: 覆盖率
+            - listitem [ref=f1e176]:
+              - generic [ref=f1e177]: "-40%"
+              - generic [ref=f1e178]: 重复开发
+          - list [ref=f1e179]:
+            - listitem [ref=f1e180]: TypeScript
+            - listitem [ref=f1e181]: React
+            - listitem [ref=f1e182]: Storybook
+            - listitem [ref=f1e183]: Rollup
+          - generic [ref=f1e184]:
+            - link "案例详情" [disabled] [ref=f1e185] [cursor=pointer]:
+              - /url: "#"
+            - link "源码（占位）" [disabled] [ref=f1e188] [cursor=pointer]:
+              - /url: "#"
+        - article [ref=f1e189]:
+          - generic [ref=f1e190]:
+            - generic [ref=f1e191]: 2023 — 2024
+            - generic [ref=f1e192]: 核心开发
+          - heading "实时数据可视化平台" [level=3] [ref=f1e193]
+          - paragraph [ref=f1e194]: 面向运营的实时看板：处理百万级数据点的渲染与交互， 通过虚拟滚动、分片渲染与 Web Worker 计算，让复杂图表在中低端设备上依然顺滑。
+          - list [ref=f1e195]:
+            - listitem [ref=f1e196]:
+              - generic [ref=f1e197]: 1M+
+              - generic [ref=f1e198]: 数据点
+            - listitem [ref=f1e199]:
+              - generic [ref=f1e200]: 60fps
+              - generic [ref=f1e201]: 交互帧率
+            - listitem [ref=f1e202]:
+              - generic [ref=f1e203]: "-45%"
+              - generic [ref=f1e204]: 首屏耗时
+          - list [ref=f1e205]:
+            - listitem [ref=f1e206]: Vue 3
+            - listitem [ref=f1e207]: ECharts
+            - listitem [ref=f1e208]: Web Worker
+            - listitem [ref=f1e209]: WebSocket
+          - generic [ref=f1e210]:
+            - link "案例详情" [disabled] [ref=f1e211] [cursor=pointer]:
+              - /url: "#"
+            - link "源码（占位）" [disabled] [ref=f1e214] [cursor=pointer]:
+              - /url: "#"
+        - article [ref=f1e215]:
+          - generic [ref=f1e216]:
+            - generic [ref=f1e217]: 2022 — 2023
+            - generic [ref=f1e218]: 体验优化
+          - heading "跨端电商体验升级" [level=3] [ref=f1e219]
+          - paragraph [ref=f1e220]: 重构移动端商详与结算链路：骨架屏、图片按需加载、关键路径资源预取， 并接入埋点看板持续跟踪转化与性能表现。
+          - list [ref=f1e221]:
+            - listitem [ref=f1e222]:
+              - generic [ref=f1e223]: +12%
+              - generic [ref=f1e224]: 转化率
+            - listitem [ref=f1e225]:
+              - generic [ref=f1e226]: 1.4s
+              - generic [ref=f1e227]: LCP
+            - listitem [ref=f1e228]:
+              - generic [ref=f1e229]: "-30%"
+              - generic [ref=f1e230]: 跳出率
+          - list [ref=f1e231]:
+            - listitem [ref=f1e232]: Next.js
+            - listitem [ref=f1e233]: SSR
+            - listitem [ref=f1e234]: Core Web Vitals
+            - listitem [ref=f1e235]: 埋点分析
+          - generic [ref=f1e236]:
+            - link "案例详情" [disabled] [ref=f1e237] [cursor=pointer]:
+              - /url: "#"
+            - link "源码（占位）" [disabled] [ref=f1e240] [cursor=pointer]:
+              - /url: "#"
+    - generic [ref=f1e243]:
+      - generic [ref=f1e244]:
+        - paragraph [ref=f1e245]: "04"
+        - heading "让我们一起做点有意思的东西" [level=2] [ref=f1e246]
+        - paragraph [ref=f1e247]: 无论是产品合作、技术咨询还是一个想法，都欢迎直接联系我。
+      - generic [ref=f1e248]:
+        - link "hello@example.com" [ref=f1e249] [cursor=pointer]:
+          - /url: mailto:hello@example.com
+        - button "复制邮箱" [ref=f1e250] [cursor=pointer]
+      - status [ref=f1e255]
+      - list [ref=f1e256]:
+        - listitem [ref=f1e257]:
+          - link "GitHub github.com/yourname" [disabled] [ref=f1e258] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=f1e262]:
+              - generic [ref=f1e263]: GitHub
+              - emphasis [ref=f1e264]: github.com/yourname
+        - listitem [ref=f1e265]:
+          - link "博客 / 掘金 juejin.cn/user/yourname" [disabled] [ref=f1e266] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=f1e271]:
+              - generic [ref=f1e272]: 博客 / 掘金
+              - emphasis [ref=f1e273]: juejin.cn/user/yourname
+        - listitem [ref=f1e274]:
+          - link "LinkedIn linkedin.com/in/yourname" [disabled] [ref=f1e275] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=f1e280]:
+              - generic [ref=f1e281]: LinkedIn
+              - emphasis [ref=f1e282]: linkedin.com/in/yourname
+  - contentinfo [ref=f1e283]:
+    - generic [ref=f1e284]:
+      - paragraph [ref=f1e285]: © 2026 你的名字 · 用 HTML / CSS / JS 手写
+      - link "回到顶部" [ref=f1e286] [cursor=pointer]:
+        - /url: "#top"

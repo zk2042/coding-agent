@@ -44,6 +44,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.status = "就绪"
 		case errors.Is(msg.Err, context.Canceled):
 			m.status = "已取消"
+		case errors.Is(msg.Err, context.DeadlineExceeded):
+			m.status = "任务超时（AGENT_TIMEOUT_SECONDS）"
 		case msg.Err.Error() != m.lastError:
 			m.appendBlock(blockError, "错误", msg.Err.Error())
 			m.status = "任务结束（有错误）"
@@ -118,19 +120,20 @@ func (m *Model) handleKey(msg tea.KeyMsg) tea.Cmd {
 	case "ctrl+c":
 		if m.busy {
 			m.cancelTask()
-			m.status = "已请求取消…"
+			m.status = "已请求取消..."
 			return nil
 		}
 		return tea.Quit
 	case "esc":
 		if m.busy {
 			m.cancelTask()
-			m.status = "已请求取消…"
+			m.status = "已请求取消..."
 			return nil
 		}
 	}
 
-	// 运行中只允许滚动与取消，避免按键进入输入框；底部此时展示 spinner 而不是输入框。
+	// 运行中只允许滚动与取消，避免按键进入输入框；状态行会显示当前进度，
+	// 输入框保持可见但不可编辑。
 	if m.busy {
 		return nil
 	}
@@ -174,7 +177,7 @@ func (m *Model) submit() tea.Cmd {
 	m.follow = true
 	m.newOutput = false
 	m.busy = true
-	m.status = "第 1 轮 · 思考中…"
+	m.status = roundStatus(1, "思考中...")
 	m.syncViewport()
 
 	parent := m.deps.Context
@@ -267,7 +270,7 @@ func (m *Model) resolveApproval(allow bool) {
 		m.deps.Bus.ResolveApproval(m.approval.id, events.Decision{Allow: allow})
 	}
 	if allow {
-		m.status = "已允许，继续执行…"
+		m.status = "已允许，继续执行..."
 		m.appendBlock(blockNotice, "审批", "已允许："+title)
 	} else {
 		m.status = "已拒绝"
@@ -279,7 +282,7 @@ func (m *Model) resolveApproval(allow bool) {
 
 func roundStatus(round int, text string) string {
 	if round > 0 {
-		return fmt.Sprintf("第 %d 轮 · %s", round, text)
+		return fmt.Sprintf("第 %d 轮 | %s", round, text)
 	}
 	return text
 }
@@ -290,7 +293,7 @@ func (m *Model) handleEvent(event events.Event) (tea.Model, tea.Cmd) {
 		m.busy = true
 		m.pendingTool = -1
 		m.lastError = ""
-		m.status = roundStatus(event.Round, "思考中…")
+		m.status = roundStatus(event.Round, "思考中...")
 		m.syncViewport()
 		return m, tea.Batch(m.waitCommand(), m.spinner.Tick)
 
@@ -341,7 +344,7 @@ func (m *Model) handleEvent(event events.Event) (tea.Model, tea.Cmd) {
 		}
 		m.pendingTool = -1
 		m.markOutput()
-		m.status = roundStatus(event.Round, "思考中…")
+		m.status = roundStatus(event.Round, "思考中...")
 		m.syncViewport()
 		return m, m.waitCommand()
 
@@ -355,7 +358,7 @@ func (m *Model) handleEvent(event events.Event) (tea.Model, tea.Cmd) {
 				rendered: m.md.Render(event.Text),
 			})
 		}
-		m.status = "整理回答…"
+		m.status = "整理回答..."
 		m.syncViewport()
 		return m, m.waitCommand()
 

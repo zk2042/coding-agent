@@ -38,7 +38,24 @@ type busApprover struct {
 }
 
 func (a busApprover) Approve(ctx context.Context, req tools.Approval) (bool, error) {
-	decision, err := a.bus.RequestApproval(ctx, req.Title, req.Detail)
+	// 审批是在等用户操作，不应该消耗任务的总时限。
+	// 这里只继承“主动取消”（Ctrl+C / 退出），忽略父 ctx 的 deadline。
+	approvalCtx, cancel := context.WithCancel(context.WithoutCancel(ctx))
+	defer cancel()
+
+	done := make(chan struct{})
+	defer close(done)
+	go func() {
+		select {
+		case <-ctx.Done():
+			if errors.Is(ctx.Err(), context.Canceled) {
+				cancel()
+			}
+		case <-done:
+		}
+	}()
+
+	decision, err := a.bus.RequestApproval(approvalCtx, req.Title, req.Detail)
 	if err != nil {
 		return false, err
 	}
@@ -94,7 +111,8 @@ func run() error {
 	}
 
 	approver := busApprover{bus}
-	registry, preview := buildRegistry(workspace, catalog, approver, seconds(cfg.ShellTimeoutSeconds))
+	scope := tools.NewProjectScope(workspace.Root())
+	registry, preview := buildRegistry(workspace, catalog, approver, seconds(cfg.ShellTimeoutSeconds), scope)
 	defer preview.Close()
 
 	notices, stopMCP := startMCP(ctx, bus, registry, workspace.Root(), approver, cfg.MCPConfig)
@@ -109,6 +127,7 @@ func run() error {
 		Skills: catalog,
 		Bus:    bus,
 		Memory: mem,
+		Scope:  scope,
 		Options: agent.Options{
 			MaxSteps:      cfg.MaxSteps,
 			WorkspaceRoot: workspace.Root(),
@@ -153,15 +172,16 @@ func buildRegistry(
 	catalog *skills.Catalog,
 	approver tools.Approver,
 	shellTimeout time.Duration,
+	scope *tools.ProjectScope,
 ) (*tools.Registry, *tools.PreviewSite) {
 	registry := tools.NewRegistry()
 	registry.Add(tools.NewReadFile(workspace))
-	registry.Add(tools.NewWriteFile(workspace))
-	registry.Add(tools.NewDeleteFile(workspace, approver))
+	registry.Add(tools.NewWriteFile(workspace, scope))
+	registry.Add(tools.NewDeleteFile(workspace, approver, scope))
 	registry.Add(tools.NewListFiles(workspace))
 	registry.Add(tools.NewWriteTempFile(workspace))
 	registry.Add(tools.NewShell(workspace, approver, shellTimeout))
-	registry.Add(tools.NewConfirmPlan(approver))
+	registry.Add(tools.NewConfirmPlan(approver, scope))
 	registry.Add(tools.NewLoadSkill(catalog))
 
 	preview := tools.NewPreviewSite(workspace)
