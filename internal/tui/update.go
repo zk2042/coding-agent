@@ -397,7 +397,7 @@ func (m *Model) handleEvent(event events.Event) (tea.Model, tea.Cmd) {
 		}
 		text := event.ApprovalTitle
 		if detail := strings.TrimSpace(event.ApprovalDetail); detail != "" {
-			text += "\n" + firstLines(ansi.Hardwrap(detail, m.textWidth(), false), 8)
+			text += "\n" + ansi.Hardwrap(detail, m.textWidth(), false)
 		}
 		text += "\n按 y 允许，n 拒绝。"
 		m.appendBlock(blockNotice, "等待审批", text)
