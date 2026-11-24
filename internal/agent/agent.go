@@ -86,7 +86,7 @@ func (a *Agent) Run(ctx context.Context, sess *session.Session, input string) er
 
 	// 压缩发生在写入本轮输入之前，避免把当前任务切进摘要。
 	a.maybeCompress(ctx, sess)
-	a.trimIfNeeded(sess)
+	a.trimIfNeeded(ctx, sess)
 
 	sess.Append(llm.User(input))
 
@@ -102,7 +102,7 @@ func (a *Agent) Run(ctx context.Context, sess *session.Session, input string) er
 
 		// 单轮长任务可能没有可切分的 user 消息，每轮调用前都检查一次预算。
 		a.shrinkToolOutputsIfNeeded(sess)
-		a.trimIfNeeded(sess)
+		a.trimIfNeeded(ctx, sess)
 
 		resp, err := a.deps.LLM.Complete(ctx, llm.Request{
 			Items: a.inputItems(sess),
@@ -229,7 +229,7 @@ func (a *Agent) systemPrompt(sess *session.Session) string {
 
 规则：
 1. 先理解目标。只读任务可以直接开始；需要创建或修改文件时，先调用 confirm_plan 提交方案，参数必须包含 project（项目目录名）、mode（create 或 modify）、files（文件清单）和 plan，用户同意后再写文件。
-2. 读取、列目录、加载 Skill、预览，以及写入 .agent-tmp 下的一次性检查脚本，不需要提交方案。读取文件用 read_file：它一次返回完整内容（≤30KB）；若结果提示“已读取第 a-b 行”，用 offset 继续读取即可，不要用 run_shell 写脚本分段读文件。
+2. 读取、列目录、加载 Skill、预览，以及写入 .agent-tmp 下的一次性检查脚本，不需要提交方案。读取文件用 read_file：它一次返回完整内容（≤30KB）；若结果提示“已读取第 a-b 行”，用 offset 继续读取即可，不要用 run_shell 写脚本分段读文件。不要用 read_file 读取图片/截图——模型看不到图片；验证页面用 browser_snapshot、浏览器控制台或 DOM 查询。
 3. 删除文件也必须先通过 confirm_plan 列入文件清单，再调用 delete_file（它会再次请求用户审批）；不要用 run_shell 执行删除命令；delete_file 不能删除目录。
 4. 所有项目文件只能写入 workspace/<当前项目>/；新项目必须创建新的独立目录；不要写入或修改其他项目目录（例如 portfolio），除非用户明确要求修改该项目。项目文件优先用 write_file 写入，不要用 run_shell 绕过项目范围限制。
 5. 执行 Shell 或需要审批的 MCP 工具会请求用户审批；被拒绝时不要绕过，改为询问用户或调整方案。

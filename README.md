@@ -39,7 +39,7 @@
 | 浏览器自检 | Playwright MCP 打开预览地址，读快照、控制台并点击验证；发现不符即改代码再复验 |
 | 交互 | 按轮展示思考与回答、工具调用进度、Markdown 定稿渲染、`/new` 新建会话 |
 
-内置工具：`read_file`、`write_file`、`list_files`、`write_temp_file`、`delete_file`、`run_shell`、`confirm_plan`、`load_skill`、`preview_site`，以及启动后热注册的 MCP 工具。`read_file` 默认一次返回完整文件（≤30KB），更大文件用 `offset`/`limit` 按行续读，不需要用 `run_shell` 分段读文件。
+内置工具：`read_file`、`write_file`、`list_files`、`write_temp_file`、`delete_file`、`run_shell`、`confirm_plan`、`load_skill`、`preview_site`，以及启动后热注册的 MCP 工具。`read_file` 默认一次返回完整文件（≤30KB），更大文件用 `offset`/`limit` 按行续读，不需要用 `run_shell` 分段读文件；图片/二进制文件会被拒绝并提示改用浏览器工具验证。
 
 ## 2. 环境要求
 
@@ -230,7 +230,7 @@ llm / events / session / memory / skills
 - 摘要压缩：保留最近 5 轮用户对话，更早部分交给模型合并进摘要；只在 user 消息处切分，保证 `function_call` 与 `function_call_output` 不被拆开。
 - 失败：摘要调用失败时保留原文，下一轮再试，不会先删后总结。
 - 单轮长任务：没有足够 user 消息可切时，把较旧工具输出替换为占位文本；最近 4 条工具输出保留，单条超过 30000 字才截断（与 `read_file` 上限对齐，避免刚读入的完整文件被截断）。调用与结果的结构不变。
-- 硬上限：仍超过 80 条时，多轮会话按最旧 user 轮次丢弃；单轮任务按完整工具调用/结果对丢弃，不会留下孤立输出。
+- 硬上限：仍超过 120 条时，多轮会话按最旧 user 轮次丢弃；单轮任务按完整工具调用/结果对处理：先把要丢弃的内容摘要进滚动摘要，摘要成功后再删；只有摘要失败时才直接丢弃，且不会留下孤立输出。
 - 执行时机：每次 `Run` 开始时摘要压缩；每轮模型调用前再检查字符预算并降级旧工具输出。
 - 不落盘：摘要与窗口只存在进程内存，进程退出或 `/new` 后即丢弃。
 

@@ -17,10 +17,11 @@ import (
 //   - 摘要失败时保留原文，不丢数据；
 //   - 仍超过硬上限时按整轮丢弃，作为最后兜底。
 const (
-	compressMinItems     = 40
-	compressCharBudget   = 60000
-	keepRecentRounds     = 5
-	maxContextItems      = 80
+	compressMinItems   = 40
+	compressCharBudget = 60000
+	keepRecentRounds   = 5
+	// 减少单轮任务中途丢弃历史工具结果的次数。
+	maxContextItems      = 120
 	trimKeepRounds       = 3
 	maxSummaryRunes      = 600
 	maxSummaryInputRunes = 12000
@@ -122,8 +123,10 @@ func (a *Agent) shrinkToolOutputs(sess *session.Session) int {
 	return changed
 }
 
-// trimIfNeeded 是压缩连续失败时的硬上限兜底。
-func (a *Agent) trimIfNeeded(sess *session.Session) {
+// trimIfNeeded 是压缩连续失败或单轮长任务时的硬上限兜底。
+// 单轮任务没有 user 切分点：先把要丢弃的最旧工具对摘要进滚动摘要，
+// 摘要成功再删；只有摘要失败时才直接丢弃。
+func (a *Agent) trimIfNeeded(ctx context.Context, sess *session.Session) {
 	if sess == nil || len(sess.Items) <= maxContextItems {
 		return
 	}
@@ -138,22 +141,35 @@ func (a *Agent) trimIfNeeded(sess *session.Session) {
 		return
 	}
 
-	// 单轮任务没有 user 切分点：按完整工具调用/结果对丢弃最旧内容。
-	kept, dropped := dropOldestToolPairs(sess.Items, maxContextItems)
-	if dropped > 0 {
+	// 单轮任务没有 user 切分点：按完整工具调用/结果对挑出最旧的内容。
+	kept, removed := dropOldestToolPairs(sess.Items, maxContextItems)
+	if len(removed) == 0 {
+		return
+	}
+
+	summary, err := a.summarize(ctx, sess.Summary, removed)
+	if err == nil && strings.TrimSpace(summary) != "" {
+		sess.Summary = summary
 		sess.Items = kept
 		a.emit(events.Event{
 			Kind: events.Notice,
-			Text: fmt.Sprintf("上下文超过上限，已丢弃最旧的 %d 条工具调用与结果（未摘要）", dropped),
+			Text: fmt.Sprintf("上下文超过上限，已将最旧的 %d 条工具调用与结果压缩进摘要", len(removed)),
 		})
+		return
 	}
+
+	sess.Items = kept
+	a.emit(events.Event{
+		Kind: events.Notice,
+		Text: fmt.Sprintf("上下文超过上限，已丢弃最旧的 %d 条工具调用与结果（未摘要）", len(removed)),
+	})
 }
 
 // dropOldestToolPairs 从最旧处成对移除 function_call 与 function_call_output，
-// 直到条数回到上限；不会留下没有调用的输出。
-func dropOldestToolPairs(items []llm.Item, limit int) ([]llm.Item, int) {
+// 直到条数回到上限；不会留下没有调用的输出。removed 按原顺序返回，用于摘要。
+func dropOldestToolPairs(items []llm.Item, limit int) (kept, removed []llm.Item) {
 	if len(items) <= limit {
-		return items, 0
+		return items, nil
 	}
 	outputAt := make(map[string]int)
 	for i, item := range items {
@@ -178,16 +194,19 @@ func dropOldestToolPairs(items []llm.Item, limit int) ([]llm.Item, int) {
 		drop[out] = true
 	}
 	if len(drop) == 0 {
-		return items, 0
+		return items, nil
 	}
 
-	kept := make([]llm.Item, 0, len(items)-len(drop))
+	kept = make([]llm.Item, 0, len(items)-len(drop))
+	removed = make([]llm.Item, 0, len(drop))
 	for i, item := range items {
-		if !drop[i] {
-			kept = append(kept, item)
+		if drop[i] {
+			removed = append(removed, item)
+			continue
 		}
+		kept = append(kept, item)
 	}
-	return kept, len(drop)
+	return kept, removed
 }
 
 func (a *Agent) summarize(ctx context.Context, previous string, items []llm.Item) (string, error) {

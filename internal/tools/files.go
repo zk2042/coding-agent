@@ -2,6 +2,7 @@ package tools
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -25,7 +26,7 @@ func (t *ReadFile) Definition() llm.Tool {
 		Name: NameReadFile,
 		Description: "读取 workspace 内的文本文件。默认一次返回完整内容（上限 30KB）；" +
 			"若结果提示“已读取第 a-b 行”，用 offset 指定起始行（从 1 开始）继续读取即可，" +
-			"不要用 run_shell 分段读取文件。",
+			"不要用 run_shell 分段读取文件。图片/二进制文件无法读取，会返回提示。",
 		Parameters: objectSchema(map[string]any{
 			"path":   stringProperty("相对 workspace 的文件路径"),
 			"offset": integerProperty("起始行号，从 1 开始；默认 1"),
@@ -54,6 +55,17 @@ func (t *ReadFile) Execute(_ context.Context, raw json.RawMessage) (string, erro
 		return "", err
 	}
 	defer file.Close()
+
+	// 图片/二进制文件无法作为文本读取：模型看不到图片，读出来也是乱码。
+	// 直接给出可执行提示，避免模型反复尝试读截图、浪费轮数。
+	head := make([]byte, 512)
+	n, _ := file.Read(head)
+	if isBinaryFile(args.Path, head[:n]) {
+		return binaryReadNotice(args.Path), nil
+	}
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		return "", err
+	}
 
 	offset := args.Offset
 	if offset < 1 {
@@ -115,6 +127,20 @@ func (t *ReadFile) Execute(_ context.Context, raw json.RawMessage) (string, erro
 		note = fmt.Sprintf("\n[已读取第 %d-%d 行，文件结束（共 %d 行）]", offset, last, lineNo)
 	}
 	return b.String() + note, nil
+}
+
+// isBinaryFile 通过扩展名和 NUL 字节判断文件是否无法按文本阅读。
+func isBinaryFile(name string, head []byte) bool {
+	switch strings.ToLower(filepath.Ext(name)) {
+	case ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".ico", ".tiff", ".avif":
+		return true
+	}
+	return bytes.IndexByte(head, 0) >= 0
+}
+
+// binaryReadNotice 告诉模型为什么读不了，并指向正确的页面验证方式。
+func binaryReadNotice(name string) string {
+	return fmt.Sprintf("[%s 是图片/二进制文件，无法以文本读取。模型看不到图片内容；验证页面请用 browser_snapshot、浏览器控制台或 DOM 查询，不要用 read_file 读截图。]", filepath.Base(name))
 }
 
 // truncateUTF8 按字节截断，同时保证不切断 UTF-8 字符。
